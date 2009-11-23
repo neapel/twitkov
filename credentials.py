@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-class credentials():
+class Credentials():
 
 	def __init__(self):
 		# Load settings
@@ -16,12 +16,33 @@ class credentials():
 			}, 'api': {
 				'stream': 'sample',
 				'user':   raw_input('Twitter  user: '),
-				'passwd': raw_input('     password: ')
+				'passwd': raw_input('     password: '),
+				'parts': 8,
+				'prefix': ''
 			}}
 			json.dump( self.cred, open('cred.json', 'w') )
 
+		# Override with command-line settings
+		from optparse import OptionParser
+
+		parser = OptionParser()
+		parser.add_option('-s', '--stream', dest='stream', help='Stream something else: sample, user_timeline, friends_timeline', default=self.cred['api'].get('stream', 'sample'))
+		parser.add_option('-u', '--user', dest='stalk', help="Read this user\'s tweets instead of own", default=None)
+		parser.add_option('-n', '--new', dest='new', help='Reinitialize the database table', action='store_true', default=False)
+		parser.add_option('-p', '--prefix', dest='prefix', help='Write this session into a prefixed table', default=self.cred['api'].get('prefix', ''))
+		options, args = parser.parse_args()
+
+		self.cred['api']['stream'] = options.stream
+		self.cred['api']['stalk'] = options.stalk
+		self.cred['api']['new'] = options.new
+		self.cred['api']['prefix'] = options.prefix
+
+
+	def mapdict(self, f, d):
+		return dict([(f(k), v) for k, v in d.items() ])
+
 	def strdict(self, d):
-		return dict([(str(k), v) for k, v in self.cred[d].items() ])
+		return self.mapdict(str, self.cred[d])
 
 	def db(self):
 		import MySQLdb
@@ -38,6 +59,6 @@ class credentials():
 		return con
 
 	def stream(self):
-		from twitter import stream
-		return stream( **self.strdict('api') )
+		from twitter import Stream
+		return Stream( **self.strdict('api') )
 
