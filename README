@@ -1,0 +1,13 @@
+
+This needs MySQL. Sorry.
+
+
+Scripts will ask for credentials on first call, all information will be stored in 'cred.json' (clear text).
+
+Run './parse.py --new' to create tables and begin analyzing the stream.
+(every time you use the '--new' flag, previous statistical information will be deleted!)
+
+
+Run './generate.py --new' to generate tweets. These will be stored in a table, too, so no duplicates will be generated (also, no tweets resembling original material). Leave the '--new' flag on subsequent calls, so you won't loose old tweets.
+(both scripts generate their own tables, and won't delete other's)
+
