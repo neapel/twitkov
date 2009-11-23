@@ -32,13 +32,15 @@ class Parser():
 		'''.format(self.tab('original')))
 		cur.execute('''
 			create table if not exists {0:s} (
+				id int not null auto_increment,
 				head char({1:d}) not null,
 				head_low char({1:d}) not null,
 				tail char(1) default null,
 				count int not null default 1,
 				start tinyint(1) not null default 0,
 				unique (head_low, tail),
-				index (head_low)
+				index (head_low),
+				primary key (id)
 			) default charset=utf8
 		'''.format(self.tab('parts'), self.parts))
 		cur.close()

@@ -8,10 +8,11 @@ class Generator():
 	stops = ['www.', 'http:']
 	may_end = '.!?'
 
-	def __init__(self, con, prefix, parts = 8, **kwargs):
+	def __init__(self, con, prefix, parts = 8, sources = None, **kwargs):
 		self.con = con
 		self.parts = parts
 		self.prefix = prefix
+		self.sources = sources
 
 		self.first = '''
 			select head from {0:s}
@@ -30,18 +31,18 @@ class Generator():
 		self.existing = '''
 			select (
 				select count(*) from {0:s}
-				where text = %s
+				where lower(text) = %s
 			) + (
 				select count(*) from {1:s}
 				where text = %s
 			) + (
 				select count(*) from {0:s}
-				where position(%s in text) > 0
+				where position(%s in lower(text)) > 0
 			)
 		'''.format(self.tab('original'), self.tab('generated'))
 
 		self.publish = '''
-			insert into {0:s} (text, prob) values (%s, %s)
+			insert into {0:s} (text, prob, sources) values (%s, %s, %s)
 		'''.format(self.tab('generated'))
 
 	def create(self):
@@ -52,6 +53,7 @@ class Generator():
 				prob float not null,
 				generated timestamp not null default current_timestamp,
 				posted int(1) not null default 0,
+				sources int default null,
 				primary key (text)
 			) default charset=utf8'''.format(self.tab('generated')) )
 		cur.close()
@@ -142,24 +144,39 @@ class Generator():
 
 	def tweet(self):
 		while True:
-			t = self.make_tweet()
+			s, p = self.make_tweet()
 
-			if self.good(*t):
-				print u'POST\t{1:.5f}\t{0:s}'.format(*t)
+			if not self.good(s, p):
+				continue
 
-				cur = self.con.cursor()
-				cur.execute(self.publish, t)
-				cur.close()
+			sc = None
+			if self.sources:
+				sc = len(self.sources.find(s))
+				if sc < 2:
+					continue
+
+				print u'POST\t{0:d}\t{1:s}'.format(sc, s)
+
+			else:
+				print u'POST\t{0:s}'.format(s)
+
+
+
+			cur = self.con.cursor()
+			cur.execute(self.publish, (s, p, sc))
+			cur.close()
 
 
 
 if __name__ == '__main__':
 	from credentials import Credentials
+	from sources import Sources
 
 	cred = Credentials()
-
 	con = cred.db()
-	g = Generator(con, **cred.strdict('api'))
+
+	s = Sources(con, **cred.strdict('api'))
+	g = Generator(con, sources = s, **cred.strdict('api'))
 
 	if cred.cred['api']['new']:
 		print 'Reinitializing database.'
