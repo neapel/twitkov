@@ -20,5 +20,7 @@ def stream(user, passwd, stream):
 
 
 if __name__ == '__main__':
-	for m in stream(input('Username: '), input('Password: '), 'sample'):
+	from credentials import credentials
+	c = credentials()
+	for m in stream( **c.strdict('api') ):
 		print m
