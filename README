@@ -11,3 +11,5 @@ Run './parse.py --new' to create tables and begin analyzing the stream.
 Run './generate.py --new' to generate tweets. These will be stored in a table, too, so no duplicates will be generated (also, no tweets resembling original material). Leave the '--new' flag on subsequent calls, so you won't loose old tweets.
 (both scripts generate their own tables, and won't delete other's)
 
+
+Just quit the scripts with ^C if you feel like it, no significant data should be lost.
